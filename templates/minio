@@ -1,0 +1,4 @@
+MINIO_VOLUMES="/usr/local/share/minio/"
+MINIO_OPTS="-C /etc/minio.d/ --certs-dir /etc/minio.d/certs --address ${ip_address}:9000"
+MINIO_ACCESS_KEY=admin
+MINIO_SECRET_KEY=Hashi123!

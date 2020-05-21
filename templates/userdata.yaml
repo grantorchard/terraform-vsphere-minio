@@ -1,0 +1,60 @@
+#cloud-config
+users:
+  - name: grant
+    ssh-authorized-keys:
+     - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC8rqxon4hRyV5cLNZczuJTe8dsZ33hpWHDU993r4iiY3t9bXqfmIHlIZ7dTL93nlvsgzVdOYMVGMOHMg/a1ZK0VRoKTS5BBhBGJejjDUfWRAtedZbM9JE5HHpks+L+nf8cOM14Os+Q3BV+z4MjYfIK5ZbV0IvUaY0kscQcE8cZoOTC2hHu/MPDneKJxG+HRQJfvqvnWz69/EXyi9iqtmOn0Xy9905qtbPNlDs1c4qF+zZ1qQCkMYP0Z4AVvLaPEJZlPmDnGqz5s1vVb130aXe1A11eq4RwgvZRxXW8i88pKqCGPuLRh7anqvSI15SLpA2KWvu7wD5CvhTisc/6TfVf
+    sudo: ['ALL=(ALL) NOPASSWD:ALL']
+    groups: sudo
+    shell: /bin/bash
+
+packages:
+  - jq
+  - unzip
+
+write_files:
+  - path: /etc/environment
+    content: |
+      MINIO_ACCESS_KEY=admin
+      MINIO_SECRET_KEY=Hashi123!
+    append: true
+  - path: /etc/systemd/system/minio.service
+    content: ${minio_service}
+    permissions: '0644'
+    owner: root:root
+    encoding: b64
+  - path: /etc/minio.d/minio
+    content: ${minio_conf}
+    permissions: '0644'
+    owner: root:root
+    encoding: b64
+  - path: /etc/systemd/system/vault.service
+    content: ${vault_service}
+    permissions: '0644'
+    owner: root:root
+    encoding: b64
+  - path: /etc/vault.d/roleid
+    content: ${vault_roleid}
+    permissions: '0644'
+    owner: root:root
+  - path: /etc/vault.d/secretid
+    content: ${wrapping_token}
+    permissions: '0644'
+    owner: root:root
+  - path: /etc/vault.d/vault.conf
+    content: ${vault_conf}
+    permissions: '0644'
+    owner: root:root
+    encoding: b64
+
+runcmd:
+  - curl -O https://dl.minio.io/server/minio/release/linux-amd64/minio
+  - mv minio /usr/local/bin
+  - chmod +x /usr/local/bin/minio
+  - install -d -m 0755 -o root -g root /usr/local/share/minio
+  - systemctl daemon-reload
+  - systemctl restart minio
+  - curl -O https://releases.hashicorp.com/vault/1.4.0-rc1+ent/vault_1.4.0-rc1+ent_linux_amd64.zip
+  - unzip vault_1.4.0-rc1+ent_linux_amd64.zip
+  - mv vault -t /usr/local/bin
+  - chmod +x /usr/local/bin/vault
+  - systemctl restart vault
